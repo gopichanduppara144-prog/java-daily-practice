@@ -112,7 +112,7 @@ public class MawaBankApp {
         System.out.println("Total Accounts: " + Account.totalAccounts);
 
         FDAccount fdAccount = new FDAccount("Komali", "MAWA003", 50000);
-        savingsAccount.showDetails();
+        savingsAccount.showDetails();git add Day4/
         fdAccount.calculateInterest();
     }
 }
