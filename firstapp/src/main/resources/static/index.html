@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mawa Students</title>
+    <style>
+        body { font-family: Arial; background: #f0f2f5; padding: 20px; text-align: center; }
+        .box { background: white; max-width: 500px; margin: auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        input { width: 90%; padding: 10px; margin: 8px; border: 1px solid #ccc; border-radius: 8px; }
+        button { background: #1877f2; color: white; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        button:hover { background: #0d5cb6; }
+        .card { background: #f9f9f9; padding: 12px; margin: 10px 0; border-radius: 8px; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .del { background: red; padding: 7px 12px; }
+        .edit { background: #ff9800; padding: 7px 12px; margin-right: 5px; }
+        .btns { display: flex; }
+        .search-box { background: #e8f0fe; border: 2px solid #1877f2; font-size: 15px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>🔥 Mawa Student App 🔥</h2>
+        <input type="hidden" id="editId" />
+        <input id="name" placeholder="Name - Ex: Mawa" />
+        <input id="age" type="number" placeholder="Age - Ex: 22" />
+        <input id="course" placeholder="Course - Ex: Java" />
+        <br>
+        <button id="mainBtn" onclick="saveStudent()">Add Student</button>
+        <button id="cancelBtn" onclick="cancelEdit()" style="background: grey; display: none;">Cancel</button>
+
+        <h3>Students List</h3>
+        <input id="search" class="search-box" placeholder="🔍 Search by Name / Course... Ex: Komali" onkeyup="filterStudents()" />
+        <div id="list"></div>
+        <p id="noResult" style="display:none; color: grey;">Evaru dorakaledu mawa! 😅</p>
+    </div>
+
+<script>
+    let allStudents = [];
+
+    async function loadStudents() {
+        let res = await fetch('/students');
+        allStudents = await res.json();
+        showStudents(allStudents);
+    }
+
+    function showStudents(data) {
+        let html = "";
+        data.forEach(s => {
+            html += `<div class="card">
+                <div><b>${s.name}</b> - ${s.age} yrs - ${s.course} <br><small>ID: ${s.id}</small></div>
+                <div class="btns">
+                    <button class="edit" onclick="editStudent(${s.id}, '${s.name}', ${s.age}, '${s.course}')">Edit</button>
+                    <button class="del" onclick="deleteStudent(${s.id})">Delete</button>
+                </div>
+            </div>`;
+        });
+        document.getElementById('list').innerHTML = html;
+        document.getElementById('noResult').style.display = data.length === 0 ? "block" : "none";
+    }
+
+    function filterStudents() {
+        let keyword = document.getElementById('search').value.toLowerCase();
+        let filtered = allStudents.filter(s => 
+            s.name.toLowerCase().includes(keyword) || 
+            s.course.toLowerCase().includes(keyword)
+        );
+        showStudents(filtered);
+    }
+
+    async function saveStudent() {
+        let id = document.getElementById('editId').value;
+        let student = {
+            name: document.getElementById('name').value,
+            age: document.getElementById('age').value,
+            course: document.getElementById('course').value
+        };
+        if (id) {
+            await fetch('/students/' + id, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(student)
+            });
+        } else {
+            await fetch('/students', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(student)
+            });
+        }
+        cancelEdit();
+        loadStudents();
+    }
+
+    function editStudent(id, name, age, course) {
+        document.getElementById('editId').value = id;
+        document.getElementById('name').value = name;
+        document.getElementById('age').value = age;
+        document.getElementById('course').value = course;
+        document.getElementById('mainBtn').innerText = "Update Student";
+        document.getElementById('mainBtn').style.background = "#ff9800";
+        document.getElementById('cancelBtn').style.display = "inline-block";
+        window.scrollTo(0,0);
+    }
+
+    function cancelEdit() {
+        document.getElementById('editId').value = "";
+        document.getElementById('name').value = "";
+        document.getElementById('age').value = "";
+        document.getElementById('course').value = "";
+        document.getElementById('mainBtn').innerText = "Add Student";
+        document.getElementById('mainBtn').style.background = "#1877f2";
+        document.getElementById('cancelBtn').style.display = "none";
+    }
+
+    async function deleteStudent(id) {
+        await fetch('/students/' + id, { method: 'DELETE' });
+        loadStudents();
+    }
+
+    loadStudents();
+</script>
+</body>
+</html>
